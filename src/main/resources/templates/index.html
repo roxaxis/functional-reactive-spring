@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <script type="text/javascript">
+        window.onload = function () {
+
+            var chart = new Highcharts.Chart('container', {
+                title: {
+                    text: 'My Coin Price Application'
+                },
+                yAxis: {
+                    title: {
+                        text: 'Coin Price'
+                    }
+                },
+                legend: {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'middle'
+                },
+                xAxis: {
+                    type: 'datetime'
+                },
+                series: [
+                    {
+                        name: 'Bitcoin',
+                        data: []
+                    },
+                    {
+                        name: 'Neo',
+                        data: []
+                    },
+                    {
+                        name: 'Ethereum',
+                        data: []
+                    }
+                ]
+            });
+            chart.render();
+            var appendCoinPriceData = function (coinPrice) {
+                chart.series
+                    .filter(function (serie) {
+                        return serie.name === coinPrice.name
+                    })
+                    .forEach(function (serie) {
+                        var shift = serie.data.length > 40;
+                        serie.addPoint([Date.parse(coinPrice.date), coinPrice.price], true, shift);
+                    });
+            };
+
+            // The browser connects to the server and receives quotes using ServerSentEvents
+            // those quotes are appended to the chart as they're received
+            var coinPriceEventSource = new EventSource("/api/coin/prices");
+            coinPriceEventSource.onmessage = function (e) {
+                appendCoinPriceData(JSON.parse(e.data));
+            };
+        }
+    </script>
+</head>
+<body>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+
+<div id="container"></div>
+</body>
+</html>
+
